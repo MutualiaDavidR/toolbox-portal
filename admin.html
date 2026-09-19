@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Administration - Boîte à outils</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="topbar">
+    <h1>🛠️ Administration</h1>
+    <div class="user-info">
+      <a href="dashboard.html">← Retour au portail</a>
+      <span id="user-label"></span>
+      <button id="logout-btn">Déconnexion</button>
+    </div>
+  </div>
+
+  <main>
+    <div id="access-denied" class="hidden">
+      <p class="error">Accès réservé aux administrateurs.</p>
+    </div>
+
+    <div id="admin-content" class="hidden">
+
+      <section>
+        <div class="section-header">
+          <h2>Utilisateurs</h2>
+          <button id="new-user-btn">+ Nouvel utilisateur</button>
+        </div>
+        <table class="admin-table" id="users-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Rôles</th>
+              <th>Accès direct aux apps</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="4">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Accès par rôle</h2>
+        <p class="muted">Cocher une case donne l'app à TOUS les utilisateurs ayant ce rôle.</p>
+        <table class="admin-table" id="role-access-table">
+          <thead><tr><th>Rôle</th></tr></thead>
+          <tbody id="role-access-tbody">
+            <tr><td>Chargement...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modale : créer / éditer un utilisateur -->
+  <div class="modal-overlay hidden" id="user-modal">
+    <div class="modal-box">
+      <h3 id="user-modal-title">Nouvel utilisateur</h3>
+      <label>Email</label>
+      <input type="email" id="modal-email">
+      <label id="modal-password-label">Mot de passe</label>
+      <input type="password" id="modal-password" placeholder="Laisser vide pour ne pas changer">
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="btn-secondary">Annuler</button>
+        <button id="modal-save-btn">Enregistrer</button>
+      </div>
+      <div class="error" id="modal-error"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
