@@ -12,7 +12,7 @@ const roleAccessThead = document.querySelector("#role-access-table thead tr");
 
 // ---------- Init ----------
 (async () => {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await sbClient.auth.getSession();
   session = data.session;
 
   if (!session) {
@@ -34,7 +34,7 @@ const roleAccessThead = document.querySelector("#role-access-table thead tr");
 })();
 
 document.getElementById("logout-btn").addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  await sbClient.auth.signOut();
   window.location.href = "index.html";
 });
 
@@ -50,12 +50,12 @@ async function checkIsAdmin(userId) {
 // ---------- Chargement des données ----------
 async function loadAll() {
   const [rolesRes, appsRes, profilesRes, userRolesRes, appAccessUserRes, appAccessRoleRes] = await Promise.all([
-    supabase.from("roles").select("*").order("name"),
-    supabase.from("apps").select("*").order("name"),
-    supabase.from("profiles").select("*").order("email"),
-    supabase.from("user_roles").select("*"),
-    supabase.from("app_access_user").select("*"),
-    supabase.from("app_access_role").select("*"),
+    sbClient.from("roles").select("*").order("name"),
+    sbClient.from("apps").select("*").order("name"),
+    sbClient.from("profiles").select("*").order("email"),
+    sbClient.from("user_roles").select("*"),
+    sbClient.from("app_access_user").select("*"),
+    sbClient.from("app_access_role").select("*"),
   ]);
 
   allRoles = rolesRes.data || [];
@@ -125,10 +125,10 @@ function renderUsersTable() {
       const userId = cb.dataset.user;
       const roleId = parseInt(cb.dataset.role);
       if (cb.checked) {
-        await supabase.from("user_roles").insert({ user_id: userId, role_id: roleId });
+        await sbClient.from("user_roles").insert({ user_id: userId, role_id: roleId });
         (userRolesMap[userId] ??= new Set()).add(roleId);
       } else {
-        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role_id", roleId);
+        await sbClient.from("user_roles").delete().eq("user_id", userId).eq("role_id", roleId);
         userRolesMap[userId]?.delete(roleId);
       }
     });
@@ -140,10 +140,10 @@ function renderUsersTable() {
       const userId = cb.dataset.user;
       const appId = parseInt(cb.dataset.app);
       if (cb.checked) {
-        await supabase.from("app_access_user").insert({ user_id: userId, app_id: appId });
+        await sbClient.from("app_access_user").insert({ user_id: userId, app_id: appId });
         (userAppAccessMap[userId] ??= new Set()).add(appId);
       } else {
-        await supabase.from("app_access_user").delete().eq("user_id", userId).eq("app_id", appId);
+        await sbClient.from("app_access_user").delete().eq("user_id", userId).eq("app_id", appId);
         userAppAccessMap[userId]?.delete(appId);
       }
     });
@@ -183,10 +183,10 @@ function renderRoleAccessTable() {
       const roleId = parseInt(cb.dataset.role);
       const appId = parseInt(cb.dataset.app);
       if (cb.checked) {
-        await supabase.from("app_access_role").insert({ role_id: roleId, app_id: appId });
+        await sbClient.from("app_access_role").insert({ role_id: roleId, app_id: appId });
         (roleAppAccessMap[roleId] ??= new Set()).add(appId);
       } else {
-        await supabase.from("app_access_role").delete().eq("role_id", roleId).eq("app_id", appId);
+        await sbClient.from("app_access_role").delete().eq("role_id", roleId).eq("app_id", appId);
         roleAppAccessMap[roleId]?.delete(appId);
       }
     });

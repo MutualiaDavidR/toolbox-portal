@@ -3,7 +3,7 @@ const userLabel = document.getElementById("user-label");
 const logoutBtn = document.getElementById("logout-btn");
 
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sbClient.auth.getSession();
 
   if (!session) {
     window.location.href = "index.html";
@@ -48,6 +48,6 @@ const logoutBtn = document.getElementById("logout-btn");
 })();
 
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  await sbClient.auth.signOut();
   window.location.href = "index.html";
 });

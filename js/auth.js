@@ -1,6 +1,6 @@
 // Si déjà connecté, on va directement au dashboard
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sbClient.auth.getSession();
   if (session) window.location.href = "dashboard.html";
 })();
 
@@ -14,7 +14,7 @@ form.addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
 
   if (error) {
     errorBox.textContent = "Identifiants incorrects ou compte inconnu.";

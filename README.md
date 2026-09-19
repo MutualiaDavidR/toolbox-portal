@@ -9,10 +9,8 @@ les applications auxquelles il a droit (accès par utilisateur ou par profil/rô
 2. Une fois le projet créé, va dans **SQL Editor** et colle le contenu de `sql/schema.sql`, puis exécute-le.
    Cela crée toutes les tables, la vue `user_apps`, les règles de sécurité (RLS), et 2 apps + 3 rôles d'exemple.
 3. Va dans **Project Settings > API** et récupère :
-   - `Project URL` https://fnrworvnwzgqgjlgskht.supabase.co/rest/v1/
+   - `Project URL`
    - `anon public key`
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZucndvcnZud3pncWdqbGdza2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MDk4NzEsImV4cCI6MjEwNTI4NTg3MX0.gvR2aRru4rU_PQTKHevURW428RuV3R3SefW2M3UQamI
-
 4. Colle ces deux valeurs dans `js/supabaseClient.js`.
 
 ## 2. Tester en local
@@ -29,7 +27,7 @@ Deux façons de faire (table SQL Editor, ou plus tard une vraie interface admin)
 
 **Donner un rôle à un utilisateur** :
 ```sql
-insertinsert into public.user_roles (user_id, role_id)
+insert into public.user_roles (user_id, role_id)
 values ('<uuid-utilisateur>', <id-role>);
 ```
 
