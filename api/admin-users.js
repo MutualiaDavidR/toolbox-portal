@@ -23,7 +23,10 @@ async function requireAdmin(req) {
   if (!token) throw { status: 401, message: "Non authentifié." };
 
   const { data: userData, error: userError } = await adminClient.auth.getUser(token);
-  if (userError || !userData?.user) throw { status: 401, message: "Session invalide." };
+  if (userError || !userData?.user) {
+    console.error("Échec de vérification du token :", userError);
+    throw { status: 401, message: "Session invalide." };
+  }
 
   const uid = userData.user.id;
 
@@ -32,7 +35,10 @@ async function requireAdmin(req) {
     .select("roles(name)")
     .eq("user_id", uid);
 
-  if (roleError) throw { status: 500, message: "Erreur de vérification des droits." };
+  if (roleError) {
+    console.error("Échec de vérification des rôles :", roleError);
+    throw { status: 500, message: "Erreur de vérification des droits." };
+  }
 
   const isAdmin = (roleRows || []).some(r => r.roles?.name === "Admin");
   if (!isAdmin) throw { status: 403, message: "Accès réservé aux administrateurs." };
