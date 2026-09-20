@@ -40,7 +40,7 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
 });
 
 async function checkIsAdmin(userId) {
-  const { data, error } = await supabase
+  const { data, error } = await sbClient
     .from("user_roles")
     .select("roles(name)")
     .eq("user_id", userId);
