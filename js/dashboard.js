@@ -13,7 +13,7 @@ const logoutBtn = document.getElementById("logout-btn");
   userLabel.textContent = session.user.email;
 
   // Affiche le lien Administration si l'utilisateur a le rôle Admin
-  const { data: roleRows } = await supabase
+  const { data: roleRows } = await sbClient
     .from("user_roles")
     .select("roles(name)")
     .eq("user_id", session.user.id);
@@ -22,7 +22,7 @@ const logoutBtn = document.getElementById("logout-btn");
 
   // Grâce à la RLS + la vue user_apps, cette requête ne renvoie
   // QUE les apps auxquelles cet utilisateur a droit.
-  const { data: apps, error } = await supabase
+  const { data: apps, error } = await sbClient
     .from("user_apps")
     .select("*")
     .order("name");
