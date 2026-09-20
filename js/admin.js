@@ -29,6 +29,7 @@ const roleAccessThead = document.querySelector("#role-access-table thead tr");
   document.getElementById("admin-content").classList.remove("hidden");
 
   await loadAll();
+  renderAppsTable();
   renderUsersTable();
   renderRoleAccessTable();
 })();
@@ -191,6 +192,120 @@ function renderRoleAccessTable() {
       }
     });
   });
+}
+
+// ---------- Rendu : tableau des applications ----------
+const appsTbody = document.getElementById("apps-tbody");
+
+function renderAppsTable() {
+  if (allApps.length === 0) {
+    appsTbody.innerHTML = `<tr><td colspan="5">Aucune application.</td></tr>`;
+    return;
+  }
+
+  appsTbody.innerHTML = allApps.map(app => `
+    <tr>
+      <td>${app.icon || ""}</td>
+      <td>${app.name}</td>
+      <td>${app.description || ""}</td>
+      <td><a href="${app.url}" target="_blank" rel="noopener">${app.url}</a></td>
+      <td class="row-actions">
+        <button data-edit-app="${app.id}">Éditer</button>
+        <button data-delete-app="${app.id}" class="danger">Supprimer</button>
+      </td>
+    </tr>
+  `).join("");
+
+  appsTbody.querySelectorAll("[data-edit-app]").forEach(btn => {
+    btn.addEventListener("click", () => openAppModal(parseInt(btn.dataset.editApp)));
+  });
+  appsTbody.querySelectorAll("[data-delete-app]").forEach(btn => {
+    btn.addEventListener("click", () => deleteApp(parseInt(btn.dataset.deleteApp)));
+  });
+}
+
+// ---------- Création / édition / suppression d'application ----------
+const appModal = document.getElementById("app-modal");
+const appModalTitle = document.getElementById("app-modal-title");
+const appModalName = document.getElementById("app-modal-name");
+const appModalDescription = document.getElementById("app-modal-description");
+const appModalUrl = document.getElementById("app-modal-url");
+const appModalIcon = document.getElementById("app-modal-icon");
+const appModalError = document.getElementById("app-modal-error");
+let editingAppId = null;
+
+document.getElementById("new-app-btn").addEventListener("click", () => openAppModal(null));
+document.getElementById("app-modal-cancel-btn").addEventListener("click", closeAppModal);
+
+function openAppModal(appId) {
+  editingAppId = appId;
+  appModalError.textContent = "";
+
+  if (appId) {
+    const app = allApps.find(a => a.id === appId);
+    appModalTitle.textContent = "Éditer l'application";
+    appModalName.value = app?.name || "";
+    appModalDescription.value = app?.description || "";
+    appModalUrl.value = app?.url || "";
+    appModalIcon.value = app?.icon || "";
+  } else {
+    appModalTitle.textContent = "Nouvelle application";
+    appModalName.value = "";
+    appModalDescription.value = "";
+    appModalUrl.value = "";
+    appModalIcon.value = "";
+  }
+  appModal.classList.remove("hidden");
+}
+
+function closeAppModal() {
+  appModal.classList.add("hidden");
+}
+
+document.getElementById("app-modal-save-btn").addEventListener("click", async () => {
+  appModalError.textContent = "";
+  const name = appModalName.value.trim();
+  const url = appModalUrl.value.trim();
+  const description = appModalDescription.value.trim();
+  const icon = appModalIcon.value.trim();
+
+  if (!name || !url) {
+    appModalError.textContent = "Le nom et l'URL sont requis.";
+    return;
+  }
+
+  const payload = { name, url, description, icon };
+
+  let error;
+  if (editingAppId) {
+    ({ error } = await sbClient.from("apps").update(payload).eq("id", editingAppId));
+  } else {
+    ({ error } = await sbClient.from("apps").insert(payload));
+  }
+
+  if (error) {
+    appModalError.textContent = error.message || "Une erreur est survenue.";
+    return;
+  }
+
+  closeAppModal();
+  await loadAll();
+  renderAppsTable();
+  renderUsersTable();
+  renderRoleAccessTable();
+});
+
+async function deleteApp(appId) {
+  if (!confirm("Supprimer définitivement cette application ? Les accès associés seront aussi supprimés.")) return;
+  const { error } = await sbClient.from("apps").delete().eq("id", appId);
+  if (error) {
+    alert(error.message || "Erreur lors de la suppression.");
+    return;
+  }
+  await loadAll();
+  renderAppsTable();
+  renderUsersTable();
+  renderRoleAccessTable();
 }
 
 // ---------- Création / édition / suppression d'utilisateur (via API sécurisée) ----------

@@ -25,6 +25,27 @@
 
       <section>
         <div class="section-header">
+          <h2>Applications</h2>
+          <button id="new-app-btn">+ Nouvelle application</button>
+        </div>
+        <table class="admin-table" id="apps-table">
+          <thead>
+            <tr>
+              <th>Icône</th>
+              <th>Nom</th>
+              <th>Description</th>
+              <th>URL</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="apps-tbody">
+            <tr><td colspan="5">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-header">
           <h2>Utilisateurs</h2>
           <button id="new-user-btn">+ Nouvel utilisateur</button>
         </div>
@@ -70,6 +91,26 @@
         <button id="modal-save-btn">Enregistrer</button>
       </div>
       <div class="error" id="modal-error"></div>
+    </div>
+  </div>
+
+  <!-- Modale : créer / éditer une application -->
+  <div class="modal-overlay hidden" id="app-modal">
+    <div class="modal-box">
+      <h3 id="app-modal-title">Nouvelle application</h3>
+      <label>Nom</label>
+      <input type="text" id="app-modal-name" placeholder="Ex: Suivi budget">
+      <label>Description</label>
+      <input type="text" id="app-modal-description" placeholder="Courte description">
+      <label>URL</label>
+      <input type="text" id="app-modal-url" placeholder="https://...">
+      <label>Icône (emoji)</label>
+      <input type="text" id="app-modal-icon" placeholder="📊" maxlength="4">
+      <div class="modal-actions">
+        <button id="app-modal-cancel-btn" class="btn-secondary">Annuler</button>
+        <button id="app-modal-save-btn">Enregistrer</button>
+      </div>
+      <div class="error" id="app-modal-error"></div>
     </div>
   </div>
 
