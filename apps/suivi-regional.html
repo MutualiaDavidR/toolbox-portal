@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Régional — Rencontres & comptes rendus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#f5f3ee;
+    --surface:#ffffff;
+    --ink:#242621;
+    --ink-soft:#666a63;
+    --navy:#1f2a3c;
+    --navy-soft:#33415a;
+    --teal:#3c6e6e;
+    --teal-soft:#e7efee;
+    --rust:#b5533c;
+    --rust-soft:#f6e7e2;
+    --gold:#a98237;
+    --gold-soft:#f3ecdd;
+    --border:#ddd8cb;
+    --sand:#ece8dc;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(31,42,60,.06), 0 4px 14px rgba(31,42,60,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{font-family:'Lora',Georgia,serif;}
+  h1,h2,h3{margin:0 0 4px 0;color:var(--navy);font-weight:600;}
+  a{color:var(--teal);}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
+  ::selection{background:var(--teal);color:#fff;}
+
+  /* --- layout shell --- */
+  #app{min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{
+    width:230px;flex:0 0 230px;background:var(--navy);color:#f3f1ea;
+    padding:26px 18px;display:flex;flex-direction:column;gap:26px;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .brand .mark{font-family:'Lora',serif;font-weight:700;font-size:20px;letter-spacing:.2px;color:#fff;}
+  .brand .sub{font-size:11.5px;color:#b9c2cf;}
+  .nav{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+  .nav button{
+    all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;font-size:14px;color:#dbe1ea;
+    display:flex;align-items:center;gap:10px;transition:background .15s;
+  }
+  .nav button:hover{background:rgba(255,255,255,.07);}
+  .nav button.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600;}
+  .nav .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex:0 0 6px;}
+  .side-footer{margin-top:auto;font-size:12.5px;color:#aeb7c4;border-top:1px solid rgba(255,255,255,.12);padding-top:14px;}
+  .side-footer .who{color:#fff;font-weight:600;margin-bottom:2px;}
+  .side-footer button{all:unset;cursor:pointer;color:#e3b7a8;font-size:12.5px;margin-top:6px;}
+  .side-footer button:hover{text-decoration:underline;}
+
+  .main{flex:1;min-width:0;padding:30px 40px 60px;max-width:1180px;}
+  .topline{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;gap:20px;flex-wrap:wrap;}
+  .topline p{margin:6px 0 0;color:var(--ink-soft);max-width:60ch;}
+
+  /* --- generic --- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);}
+  .card + .card{margin-top:18px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media (max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}.shell{flex-direction:column;}.sidebar{width:100%;flex:none;flex-direction:row;flex-wrap:wrap;align-items:center;}.nav{flex-direction:row;flex-wrap:wrap;}.side-footer{margin-top:0;border-top:none;padding-top:0;}}
+
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--navy-soft);margin-bottom:5px;letter-spacing:.1px;}
+  .field{margin-bottom:15px;}
+  input[type=text],input[type=date],input[type=time],input[type=password],input[type=email],select,textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  textarea{resize:vertical;min-height:90px;}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+
+  .btn{border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-soft);}
+  .btn-teal{background:var(--teal);color:#fff;}
+  .btn-teal:hover{background:#2f5a5a;}
+  .btn-ghost{background:transparent;color:var(--navy);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--sand);}
+  .btn-rust{background:var(--rust-soft);color:var(--rust);}
+  .btn-rust:hover{background:#f1d8cf;}
+  .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:7px;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:100px;}
+  .badge-plan{background:var(--gold-soft);color:var(--gold);}
+  .badge-done{background:var(--teal-soft);color:var(--teal);}
+  .badge-late{background:var(--rust-soft);color:var(--rust);}
+  .badge-cat-nord{background:#e2ecf3;color:#2a5a7a;}
+  .badge-cat-ouest{background:var(--gold-soft);color:var(--gold);}
+  .badge-cat-sud{background:var(--rust-soft);color:var(--rust);}
+  .badge-cat-salarie{background:#e7e9ee;color:var(--navy-soft);}
+
+  .steps{display:flex;gap:10px;margin-bottom:20px;}
+  .step{flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:13px;color:var(--ink-soft);}
+  .step b{display:block;color:var(--navy);font-family:'Lora',serif;font-size:14px;}
+  .step.current{border-color:var(--teal);background:var(--teal-soft);}
+  .step.current b{color:var(--teal);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-size:11.5px;text-transform:none;color:var(--ink-soft);font-weight:600;border-bottom:1px solid var(--border);padding:8px 10px;}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto;}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1px solid var(--border);border-radius:100px;padding:6px 12px;font-size:13px;cursor:pointer;background:#fff;user-select:none;}
+  .chip input{margin-right:6px;}
+  .chip.checked{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:600;}
+
+  .action-row{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;background:#fdfcf9;}
+  .action-row .grid3{align-items:end;}
+
+  .empty{padding:40px 20px;text-align:center;color:var(--ink-soft);}
+  .empty .serif{font-size:17px;color:var(--navy);display:block;margin-bottom:6px;}
+
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:
+    radial-gradient(1100px 600px at 15% -10%, #2b3956 0%, transparent 60%), var(--navy);}
+  .login-card{width:380px;background:var(--surface);border-radius:14px;padding:34px 32px;box-shadow:0 20px 50px rgba(0,0,0,.35);}
+  .login-card .mark{font-family:'Lora',serif;font-weight:700;font-size:23px;color:var(--navy);}
+  .login-card .sub{color:var(--ink-soft);font-size:13px;margin:4px 0 22px;}
+  .err{color:var(--rust);font-size:13px;margin-top:10px;}
+
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:#fff;padding:13px 18px;border-radius:9px;font-size:13.5px;box-shadow:var(--shadow);z-index:50;max-width:320px;}
+
+  .kpi{display:flex;flex-direction:column;gap:2px;}
+  .kpi .num{font-family:'Lora',serif;font-size:30px;font-weight:600;color:var(--navy);}
+  .kpi .lbl{font-size:12.5px;color:var(--ink-soft);}
+
+  .planning-month{margin-bottom:26px;}
+  .planning-month h3{font-family:'Lora',serif;text-transform:capitalize;font-size:16px;margin-bottom:10px;}
+  .plan-item{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--border);}
+  .plan-item:last-child{border-bottom:none;}
+  .plan-date{width:64px;flex:0 0 64px;text-align:center;background:var(--sand);border-radius:8px;padding:6px 0;}
+  .plan-date .d{font-family:'Lora',serif;font-size:18px;font-weight:700;color:var(--navy);}
+  .plan-date .m{font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);}
+  .plan-info b{color:var(--navy);}
+  .plan-info .meta{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .filters select,.filters input{width:auto;min-width:150px;}
+
+  .loading{padding:60px;text-align:center;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =========================================================
+   SUIVI RÉGIONAL — application de suivi des rencontres
+   Stockage: capacité "db" (persistant, partagé entre les 8 responsables)
+   ========================================================= */
+
+const STATUTS_ACTION = { A_FAIRE:'a_faire', FAIT:'fait' };
+
+let state = {
+  view: 'chargement',
+  currentUser: null,       // {id,nom,code,email}
+  responsables: [],
+  internes: [],            // personnes internes additionnelles {id,nom}
+  emailsNotif: ['', '', ''],
+  nomEntreprise: 'Votre Organisation',
+  meetings: [],
+  loading: true,
+  loginError: '',
+  loginSelected: '',
+  loginCode: '',
+  editingId: null,
+  formStep: 1,
+  form: null,              // brouillon de fiche en cours de saisie
+  toast: null,
+  filterResp: '',
+  filterStatut: '',
+  filterLieu: '',
+  filterDateFrom: '',
+  filterDateTo: '',
+  sortCol: 'dateReunion',
+  sortDir: 'desc',
+  paramsTab: 'responsables',
+  saisiePartTab: 'nord',
+  paramsInternesFilter: '',
+  dictationActive: false,
+};
+
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8); }
+function todayISO(){ return new Date().toISOString(); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function fmtDateTime(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function escapeHtml(str){
+  if(str===undefined || str===null) return '';
+  return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function nl2br(str){ return escapeHtml(str).replace(/\n/g,'<br>'); }
+
+function showToast(msg){
+  state.toast = msg;
+  render();
+  setTimeout(()=>{ state.toast=null; render(); }, 3600);
+}
+
+/* ---------------- Storage (Supabase) ---------------- */
+// ⚠️ Mêmes valeurs que js/supabaseClient.js du portail
+const SUPABASE_URL = "https://fnrworvnwzgqgjlgskht.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZucndvcnZud3pncWdqbGdza2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MDk4NzEsImV4cCI6MjEwNTI4NTg3MX0.gvR2aRru4rU_PQTKHevURW428RuV3R3SefW2M3UQamI";
+
+// Même projet Supabase que le portail : comme c'est la même origine (même site),
+// la session de connexion du portail est automatiquement reconnue ici.
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let downloadsCap = null; // conservé pour la génération de PDF (fallback navigateur)
+let capabilitiesReady = false;
+
+async function initCapabilities(){
+  // Vérifie que la personne est bien connectée au portail.
+  // (La sécurité réelle des données est assurée par les policies RLS Supabase,
+  // ceci n'est qu'un confort d'interface pour rediriger vers le login si besoin.)
+  const { data: { session } } = await sbClient.auth.getSession();
+  if(!session){
+    window.location.href = "../index.html";
+    return;
+  }
+  capabilitiesReady = true;
+}
+
+function splitPath(path){
+  const idx = path.indexOf('/');
+  return { collection: path.slice(0, idx), docId: path.slice(idx + 1) };
+}
+
+async function dbGetDoc(path){
+  try{
+    const { collection, docId } = splitPath(path);
+    const { data, error } = await sbClient
+      .from('sr_documents')
+      .select('data')
+      .eq('collection', collection)
+      .eq('doc_id', docId)
+      .maybeSingle();
+    if(error) throw error;
+    return data ? data.data : null;
+  }catch(e){ console.error('db get error', path, e); return null; }
+}
+async function dbSetDoc(path, data){
+  try{
+    const { collection, docId } = splitPath(path);
+    const { error } = await sbClient
+      .from('sr_documents')
+      .upsert({ collection, doc_id: docId, data, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    return true;
+  }catch(e){ console.error('db set error', path, e); return false; }
+}
+async function dbListCollection(path){
+  try{
+    const { data, error } = await sbClient
+      .from('sr_documents')
+      .select('data')
+      .eq('collection', path);
+    if(error) throw error;
+    return (data || []).map(row => row.data);
+  }catch(e){ console.error('db list error', path, e); return []; }
+}
+
+async function loadConfig(){
+  const respDoc = await dbGetDoc('config/responsables');
+  const intDoc = await dbGetDoc('config/internes');
+  const emailsDoc = await dbGetDoc('config/emailsNotif');
+  const entDoc = await dbGetDoc('config/entreprise');
+
+  if(respDoc && Array.isArray(respDoc.list) && respDoc.list.length){
+    state.responsables = respDoc.list;
+  } else {
+    state.responsables = Array.from({length:8}, (_,i)=>({
+      id: uid('resp'),
+      nom: 'Responsable ' + (i+1),
+      code: String(1000+i+1),
+      email: '',
+      isAdmin: false
+    }));
+    await dbSetDoc('config/responsables', {list: state.responsables});
+  }
+  state.internes = (intDoc && Array.isArray(intDoc.list)) ? intDoc.list : [];
+  state.emailsNotif = (emailsDoc && Array.isArray(emailsDoc.list)) ? emailsDoc.list : ['', '', ''];
+  state.nomEntreprise = (entDoc && entDoc.nom) ? entDoc.nom : 'Votre Organisation';
+}
+
+async function saveResponsables(){ await dbSetDoc('config/responsables', {list: state.responsables}); }
+async function saveInternes(){ await dbSetDoc('config/internes', {list: state.internes}); }
+async function saveEmailsNotif(){ await dbSetDoc('config/emailsNotif', {list: state.emailsNotif}); }
+async function saveEntreprise(){ await dbSetDoc('config/entreprise', {nom: state.nomEntreprise}); }
+
+async function loadMeetings(){
+  const items = (await dbListCollection('meetings')).map(normalizeMeeting);
+  items.sort((a,b)=> new Date(b.dateReunion) - new Date(a.dateReunion));
+  state.meetings = items;
+}
+
+async function saveMeeting(m){
+  return await dbSetDoc('meetings/' + m.id, m);
+}
+
+/* ---------------- Init ---------------- */
+async function init(){
+  await initCapabilities();
+  await loadConfig();
+  await loadMeetings();
+  state.loading = false;
+  state.view = 'login';
+  render();
+}
+
+/* ---------------- Catégories de participants ---------------- */
+const CATEGORIES = [
+  {key:'nord', label:'Élus zone Nord'},
+  {key:'ouest', label:'Élus zone Ouest'},
+  {key:'sud', label:'Élus zone Sud'},
+  {key:'salarie', label:'Salariés de l\'entreprise'},
+];
+function categorieLabel(key){
+  const c = CATEGORIES.find(c=>c.key===key);
+  return c ? c.label : 'Salariés de l\'entreprise';
+}
+function normalizeMeeting(m){
+  m.participantsInternes = (m.participantsInternes||[]).map(p=>{
+    if(typeof p === 'string'){
+      const found = personnesInternesToutes().find(x=>x.nom===p);
+      return {nom:p, categorie: found ? found.categorie : 'salarie'};
+    }
+    return {nom:p.nom, categorie:p.categorie||'salarie'};
+  });
+  m.actions = m.actions || [];
+  return m;
+}
+function participantNoms(m){
+  return (m.participantsInternes||[]).map(p=> typeof p==='string' ? p : p.nom);
+}
+function participantsBreakdown(m){
+  const counts = {nord:0, ouest:0, sud:0, salarie:0};
+  (m.participantsInternes||[]).forEach(p=>{
+    const cat = (typeof p==='string') ? 'salarie' : (p.categorie||'salarie');
+    counts[cat] = (counts[cat]||0)+1;
+  });
+  return counts;
+}
+function breakdownBadgesHtml(m){
+  const b = participantsBreakdown(m);
+  const short = {nord:'Nord', ouest:'Ouest', sud:'Sud', salarie:'Salariés'};
+  return CATEGORIES.map(c=> b[c.key] ? `<span class="badge badge-cat-${c.key}">${short[c.key]} ${b[c.key]}</span>` : '').join(' ') || '<span class="hint">—</span>';
+}
+function breakdownTextPdf(m){
+  const b = participantsBreakdown(m);
+  const short = {nord:'Élus Nord', ouest:'Élus Ouest', sud:'Élus Sud', salarie:'Salariés'};
+  return CATEGORIES.map(c=> b[c.key] ? short[c.key]+' : '+b[c.key] : null).filter(Boolean).join(', ') || 'Aucun participant renseigné';
+}
+
+/* ---------------- Auth ---------------- */
+function personnesInternesToutes(){
+  return [
+    ...state.responsables.map(r=>({id:'r_'+r.id, nom:r.nom, categorie:'salarie'})),
+    ...state.internes.map(p=>({id:p.id, nom:p.nom, categorie: p.categorie || 'salarie'}))
+  ];
+}
+
+function hasAnyAdmin(){
+  return state.responsables.some(r=>r.isAdmin);
+}
+/**
+ * Un administrateur est requis pour accéder aux Paramètres. Tant qu'aucun
+ * responsable n'a encore été désigné administrateur (premier démarrage),
+ * l'accès reste ouvert à tous afin qu'un premier administrateur puisse être
+ * défini ; dès qu'au moins un administrateur existe, l'accès se restreint.
+ */
+function isCurrentUserAdmin(){
+  if(!state.currentUser) return false;
+  if(!hasAnyAdmin()) return true;
+  return !!state.currentUser.isAdmin;
+}
+
+function attemptLogin(){
+  const resp = state.responsables.find(r=>r.id===state.loginSelected);
+  if(!resp){ state.loginError = 'Sélectionnez votre nom.'; render(); return; }
+  if(String(resp.code).trim() !== String(state.loginCode).trim() || !state.loginCode){
+    state.loginError = 'Code incorrect.';
+    render();
+    return;
+  }
+  state.currentUser = resp;
+  state.loginError = '';
+  state.loginCode = '';
+  state.view = 'liste';
+  render();
+}
+
+function logout(){
+  state.currentUser = null;
+  state.view = 'login';
+  state.editingId = null;
+  state.form = null;
+  render();
+}
+
+/* ---------------- Form (saisie) ---------------- */
+function blankForm(){
+  return {
+    id: uid('mtg'),
+    createdBy: state.currentUser.nom,
+    createdAt: todayISO(),
+    updatedAt: todayISO(),
+    statut: 'planifiee',
+    dateReunion: '',
+    heureReunion: '',
+    lieu: '',
+    participantsInternes: [{nom: state.currentUser.nom, categorie: 'salarie'}],
+    participantsExternes: '',
+    compteRendu: '',
+    actions: [],
+    notifEnvoyee: false,
+  };
+}
+
+function startNewMeeting(){
+  state.editingId = null;
+  state.form = blankForm();
+  state.formStep = 1;
+  state.saisiePartTab = 'nord';
+  state.view = 'saisie';
+  render();
+}
+
+function openMeetingForEdit(id){
+  const m = state.meetings.find(x=>x.id===id);
+  if(!m) return;
+  state.editingId = id;
+  state.form = JSON.parse(JSON.stringify(m));
+  state.formStep = m.statut === 'complete' ? 2 : 1;
+  state.saisiePartTab = 'nord';
+  state.view = 'saisie';
+  render();
+}
+
+function addActionRow(){
+  state.form.actions.push({ id: uid('act'), description:'', responsable:'', dateButoir:'', statut: STATUTS_ACTION.A_FAIRE });
+  render();
+}
+function removeActionRow(actId){
+  state.form.actions = state.form.actions.filter(a=>a.id!==actId);
+  render();
+}
+
+function buildMailto(m){
+  const to = state.emailsNotif.filter(Boolean).join(',');
+  const subject = 'Nouvelle fiche de rencontre — ' + (m.lieu||'') + ' — ' + fmtDate(m.dateReunion);
+  const body = [
+    'Une nouvelle fiche de rencontre vient d\'être enregistrée.',
+    '',
+    'Rédigée par : ' + m.createdBy,
+    'Date de la réunion : ' + fmtDate(m.dateReunion) + (m.heureReunion ? ' à ' + m.heureReunion : ''),
+    'Lieu : ' + (m.lieu || '—'),
+    'Participants internes : ' + (participantNoms(m).join(', ') || '—'),
+    'Participants externes : ' + (m.participantsExternes || '—'),
+    '',
+    'Compte rendu :',
+    m.compteRendu || '(à compléter ultérieurement)',
+    '',
+    'Actions à mener : ' + (m.actions.length ? m.actions.map(a=>'- '+a.description+' (resp. '+(a.responsable||'—')+', échéance '+fmtDate(a.dateButoir)+')').join('\n') : '—'),
+  ].join('\n');
+  return 'mailto:' + encodeURIComponent(to).replace(/%2C/g,',') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+async function submitForm(finalize){
+  const f = state.form;
+  if(!f.dateReunion || !f.lieu){
+    showToast('Merci de renseigner au minimum la date et le lieu de la réunion.');
+    return;
+  }
+  const isNew = state.editingId === null;
+  f.statut = (f.compteRendu && f.compteRendu.trim()) ? 'complete' : 'planifiee';
+  f.updatedAt = todayISO();
+
+  const ok = await saveMeeting(f);
+  if(!ok){
+    showToast('⚠️ Impossible d\'enregistrer : ouvrez l\'application depuis son lien publié pour que les données soient sauvegardées.');
+    return;
+  }
+
+  if(isNew){
+    state.meetings.unshift(f);
+    state.editingId = f.id;
+    if(!f.notifEnvoyee){
+      f.notifEnvoyee = true;
+      await saveMeeting(f);
+      const mailtoUrl = buildMailto(f);
+      try{ window.open(mailtoUrl, '_blank'); }catch(e){ try{ window.location.href = mailtoUrl; }catch(e2){} }
+    }
+    showToast('Fiche enregistrée et e-mail de notification préparé.');
+  } else {
+    const idx = state.meetings.findIndex(x=>x.id===f.id);
+    if(idx>-1) state.meetings[idx] = f;
+    showToast('Fiche mise à jour.');
+  }
+  state.view = 'liste';
+  render();
+}
+
+/* ---------------- Import en masse des responsables (txt/csv) ---------------- */
+function parseResponsablesImport(text){
+  const lines = text.split(/\r\n|\n|\r/).map(l=>l.trim()).filter(Boolean);
+  const existing = new Set(state.responsables.map(r=>r.nom.trim().toLowerCase()));
+  let added = 0, skipped = 0;
+  lines.forEach(line=>{
+    if(/^nom\s*[;,]/i.test(line) || /^nom$/i.test(line)) return; // ignore une éventuelle ligne d'en-tête
+    const sep = line.includes(';') ? ';' : (line.includes(',') ? ',' : null);
+    let nom, code = '', email = '';
+    if(sep){
+      const parts = line.split(sep).map(s=>s.trim());
+      nom = parts[0]; code = parts[1] || ''; email = parts[2] || '';
+    } else {
+      nom = line;
+    }
+    if(!nom) return;
+    const key = nom.toLowerCase();
+    if(existing.has(key)){ skipped++; return; }
+    existing.add(key);
+    state.responsables.push({id: uid('resp'), nom, code, email, isAdmin:false});
+    added++;
+  });
+  return {added, skipped};
+}
+
+/* ---------------- Import en masse (txt/csv) — personnes internes ---------------- */
+function parseImportFile(text, defaultCat){
+  const lines = text.split(/\r\n|\n|\r/).map(l=>l.trim()).filter(Boolean);
+  const existing = new Set([
+    ...state.internes.map(p=>p.nom.trim().toLowerCase()),
+    ...state.responsables.map(r=>r.nom.trim().toLowerCase()),
+  ]);
+  let added = 0, skipped = 0;
+  lines.forEach(line=>{
+    if(/^nom\s*[;,]?\s*(cat[ée]gorie|zone)?$/i.test(line)) return; // ignore une éventuelle ligne d'en-tête
+    let nom = line, cat = defaultCat;
+    const sep = line.includes(';') ? ';' : (line.includes(',') ? ',' : null);
+    if(sep){
+      const parts = line.split(sep).map(s=>s.trim());
+      nom = parts[0];
+      if(parts[1]){
+        const low = parts[1].toLowerCase();
+        if(low.includes('nord')) cat='nord';
+        else if(low.includes('ouest')) cat='ouest';
+        else if(low.includes('sud')) cat='sud';
+        else if(low.includes('salari')) cat='salarie';
+      }
+    }
+    if(!nom) return;
+    const key = nom.toLowerCase();
+    if(existing.has(key)){ skipped++; return; }
+    existing.add(key);
+    state.internes.push({id: uid('int'), nom, categorie: cat});
+    added++;
+  });
+  return {added, skipped};
+}
+
+/* ---------------- Dictée vocale ---------------- */
+let recognitionInstance = null;
+function speechSupported(){
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+function stopDictation(){
+  if(recognitionInstance){
+    try{ recognitionInstance.stop(); }catch(e){}
+  }
+}
+function toggleDictation(){
+  if(!speechSupported()){
+    showToast('La dictée vocale n\'est pas prise en charge par ce navigateur (essayez Chrome sur ordinateur).');
+    return;
+  }
+  if(state.dictationActive){
+    stopDictation();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recog = new SR();
+  recognitionInstance = recog;
+  recog.lang = 'fr-FR';
+  recog.continuous = true;
+  recog.interimResults = true;
+
+  let finalText = state.form.compteRendu ? state.form.compteRendu.trim() + ' ' : '';
+
+  recog.onresult = (event)=>{
+    let interim = '';
+    for(let i=event.resultIndex; i<event.results.length; i++){
+      const transcript = event.results[i][0].transcript;
+      if(event.results[i].isFinal){ finalText += transcript + ' '; }
+      else { interim += transcript; }
+    }
+    state.form.compteRendu = (finalText + interim).trim();
+    const ta = document.getElementById('compteRenduTextarea');
+    if(ta) ta.value = state.form.compteRendu;
+  };
+  recog.onerror = (e)=>{
+    console.error('speech recognition error', e);
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      showToast('Accès au micro refusé ou indisponible dans ce contexte.');
+    } else if(e.error === 'no-speech'){
+      /* silence, on ne fait rien */
+    } else {
+      showToast('La dictée vocale a été interrompue.');
+    }
+  };
+  recog.onend = ()=>{
+    state.dictationActive = false;
+    recognitionInstance = null;
+    render();
+  };
+  try{
+    recog.start();
+    state.dictationActive = true;
+    render();
+  }catch(e){
+    showToast('Impossible de démarrer la dictée vocale.');
+  }
+}
+
+/* ---------------- PDF ---------------- */
+async function generatePDF(m){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 16;
+  let y = 0;
+
+  // En-tête / letterhead
+  doc.setFillColor(31,42,60);
+  doc.rect(0,0,pageW,32,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('times','bold');
+  doc.setFontSize(17);
+  doc.text(state.nomEntreprise, marginX, 14);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  doc.text('Compte rendu de réunion', marginX, 22);
+  doc.setFontSize(8.5);
+  doc.text('Fiche générée le ' + fmtDateTime(todayISO()), marginX, 28);
+  doc.setTextColor(180,190,205);
+  doc.text('Réf. ' + m.id, pageW - marginX, 28, {align:'right'});
+
+  y = 42;
+  doc.setTextColor(36,38,33);
+
+  function sectionTitle(txt){
+    doc.setFont('times','bold');
+    doc.setFontSize(12.5);
+    doc.setTextColor(31,42,60);
+    doc.text(txt, marginX, y);
+    doc.setDrawColor(200,196,183);
+    doc.line(marginX, y+2, pageW-marginX, y+2);
+    y += 8;
+    doc.setTextColor(36,38,33);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10.5);
+  }
+  function labelValue(label, value){
+    doc.setFont('helvetica','bold');
+    doc.text(label, marginX, y);
+    doc.setFont('helvetica','normal');
+    const lines = doc.splitTextToSize(String(value||'—'), pageW - marginX*2 - 42);
+    doc.text(lines, marginX+42, y);
+    y += Math.max(6, lines.length*5);
+  }
+  function checkPageBreak(needed){
+    if(y + needed > 285){
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  sectionTitle('Informations générales');
+  labelValue('Statut', m.statut === 'complete' ? 'Réunion tenue / compte rendu complété' : 'Réunion planifiée');
+  labelValue('Date de la réunion', fmtDate(m.dateReunion) + (m.heureReunion ? ' à ' + m.heureReunion : ''));
+  labelValue('Lieu', m.lieu);
+  labelValue('Rédigé par', m.createdBy);
+  labelValue('Créé le', fmtDateTime(m.createdAt));
+  labelValue('Dernière mise à jour', fmtDateTime(m.updatedAt));
+  y += 3;
+
+  checkPageBreak(30);
+  sectionTitle('Participants');
+  labelValue('Participants internes', participantNoms(m).join(', '));
+  labelValue('Répartition', breakdownTextPdf(m));
+  labelValue('Participants externes', m.participantsExternes);
+  y += 3;
+
+  checkPageBreak(30);
+  sectionTitle('Compte rendu');
+  const crLines = doc.splitTextToSize(m.compteRendu || 'Compte rendu non renseigné.', pageW - marginX*2);
+  checkPageBreak(crLines.length*5 + 6);
+  doc.text(crLines, marginX, y);
+  y += crLines.length*5 + 6;
+
+  checkPageBreak(20);
+  sectionTitle('Actions à mener');
+  if(!m.actions.length){
+    doc.text('Aucune action enregistrée.', marginX, y);
+    y += 8;
+  } else {
+    const colX = [marginX, marginX+80, marginX+128, marginX+160];
+    checkPageBreak(10);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9.5);
+    doc.text('Action', colX[0], y);
+    doc.text('Responsable', colX[1], y);
+    doc.text('Échéance', colX[2], y);
+    doc.text('Statut', colX[3], y);
+    y += 2;
+    doc.setDrawColor(200,196,183);
+    doc.line(marginX, y, pageW-marginX, y);
+    y += 5;
+    doc.setFont('helvetica','normal');
+    m.actions.forEach(a=>{
+      const descLines = doc.splitTextToSize(a.description || '—', 76);
+      checkPageBreak(descLines.length*5 + 3);
+      doc.text(descLines, colX[0], y);
+      doc.text(a.responsable || '—', colX[1], y);
+      doc.text(fmtDate(a.dateButoir), colX[2], y);
+      doc.text(a.statut === STATUTS_ACTION.FAIT ? 'Fait' : 'À faire', colX[3], y);
+      y += Math.max(6, descLines.length*5+1);
+    });
+  }
+
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setFontSize(8);
+    doc.setTextColor(140,140,140);
+    doc.text('Page ' + p + '/' + totalPages, pageW-marginX, 293, {align:'right'});
+  }
+
+  const filename = 'compte-rendu_' + (m.lieu||'reunion').replace(/[^a-z0-9]+/gi,'-').toLowerCase() + '_' + (m.dateReunion||'sansdate') + '.pdf';
+  const blob = doc.output('blob');
+  if(downloadsCap){
+    try{
+      await downloadsCap.save({filename, data: blob});
+      showToast('PDF enregistré.');
+    }catch(e){
+      if(e && e.code === 'declined'){ /* l'utilisateur a refusé, rien à signaler */ }
+      else { showToast('Le téléchargement du PDF a échoué ou est indisponible ici.'); }
+    }
+  } else {
+    try{ doc.save(filename); }
+    catch(e){ showToast('Le téléchargement du PDF n\'est pas disponible dans ce contexte.'); }
+  }
+}
+
+/* ---------------- Render helpers ---------------- */
+function isLate(action){
+  if(action.statut === STATUTS_ACTION.FAIT) return false;
+  if(!action.dateButoir) return false;
+  return new Date(action.dateButoir) < new Date(new Date().toDateString());
+}
+
+function statusBadge(m){
+  if(m.statut === 'complete') return '<span class="badge badge-done">Compte rendu réalisé</span>';
+  return '<span class="badge badge-plan">Planifiée</span>';
+}
+
+/* ---------------- Views ---------------- */
+function storageWarningBanner(){
+  if(dbCap) return '';
+  return `<div style="background:var(--rust-soft);color:var(--rust);border:1px solid #e3c3b8;border-radius:9px;padding:11px 16px;margin-bottom:18px;font-size:13px;">
+    ⚠️ Les données ne seront <b>pas sauvegardées durablement</b> dans ce contexte. Pour un usage réel avec vos 8 responsables, ouvrez et utilisez le lien de l'application <b>publiée</b> (bouton « Publish » / lien claude.ai partagé), pas le fichier téléchargé en local.
+  </div>`;
+}
+
+function renderApp(){
+  const app = document.getElementById('app');
+  if(state.loading){
+    app.innerHTML = '<div class="loading">Chargement…</div>';
+    return;
+  }
+  if(state.view === 'login'){
+    app.innerHTML = viewLogin();
+    return;
+  }
+  if(state.view === 'parametres' && !isCurrentUserAdmin()){
+    state.view = 'liste';
+  }
+  app.innerHTML = `
+    <div class="shell">
+      ${sidebar()}
+      <div class="main">
+        ${storageWarningBanner()}
+        ${state.view==='liste' ? viewListe() : ''}
+        ${state.view==='saisie' ? viewSaisie() : ''}
+        ${state.view==='planning' ? viewPlanning() : ''}
+        ${state.view==='stats' ? viewStats() : ''}
+        ${state.view==='parametres' ? viewParametres() : ''}
+      </div>
+    </div>
+    ${state.toast ? `<div class="toast">${escapeHtml(state.toast)}</div>` : ''}
+  `;
+  if(state.view === 'stats') mountCharts();
+}
+
+function sidebar(){
+  const nav = [
+    ['liste','Fiches de rencontre'],
+    ['saisie','Nouvelle rencontre'],
+    ['planning','Planning'],
+    ['stats','Statistiques'],
+  ];
+  if(isCurrentUserAdmin()) nav.push(['parametres','Paramètres']);
+  return `
+  <div class="sidebar">
+    <div class="brand">
+      <div class="mark">Suivi Régional</div>
+      <div class="sub">Rencontres &amp; comptes rendus</div>
+    </div>
+    <div class="nav">
+      ${nav.map(([v,l])=>`<button data-nav="${v}" class="${state.view===v?'active':''}"><span class="dot"></span>${l}</button>`).join('')}
+    </div>
+    <div class="side-footer">
+      <div class="who">${escapeHtml(state.currentUser.nom)}${isCurrentUserAdmin() ? ' <span class="badge badge-done" style="margin-left:4px;">Admin</span>' : ''}</div>
+      <div>Connecté(e)</div>
+      <button data-action="logout">Se déconnecter</button>
+    </div>
+  </div>`;
+}
+
+function viewLogin(){
+  const options = state.responsables.map(r=>`<option value="${r.id}" ${state.loginSelected===r.id?'selected':''}>${escapeHtml(r.nom)}</option>`).join('');
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="mark">Suivi Régional</div>
+      <div class="sub">Identifiez-vous pour accéder à vos fiches de rencontre.</div>
+      ${!dbCap ? `<div style="background:#fbeee8;color:var(--rust);border:1px solid #e3c3b8;border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:14px;">⚠️ Données non sauvegardées dans ce contexte — utilisez le lien de l'application publiée.</div>` : ''}
+      <div class="field">
+        <label for="loginSelect">Votre nom</label>
+        <select id="loginSelect">
+          <option value="">— Sélectionnez —</option>
+          ${options}
+        </select>
+      </div>
+      <div class="field">
+        <label for="loginCode">Code personnel</label>
+        <input type="password" id="loginCode" placeholder="Votre code" value="${escapeHtml(state.loginCode)}">
+      </div>
+      ${state.loginError ? `<div class="err">${escapeHtml(state.loginError)}</div>` : ''}
+      <button class="btn btn-primary" id="btnLogin" style="width:100%;justify-content:center;margin-top:6px;">Se connecter</button>
+      <div class="hint" style="margin-top:14px;">Les identifiants sont gérés par votre organisation dans l'onglet Paramètres.</div>
+    </div>
+  </div>`;
+}
+
+function sortIndicator(col){
+  if(state.sortCol !== col) return '<span style="opacity:.3;">↕</span>';
+  return state.sortDir === 'asc' ? '↑' : '↓';
+}
+
+function viewListe(){
+  let list = state.meetings.slice();
+  if(state.filterResp) list = list.filter(m=>m.createdBy===state.filterResp);
+  if(state.filterStatut) list = list.filter(m=>m.statut===state.filterStatut);
+  if(state.filterLieu) list = list.filter(m=>(m.lieu||'').toLowerCase().includes(state.filterLieu.toLowerCase()));
+  if(state.filterDateFrom) list = list.filter(m=> m.dateReunion && m.dateReunion >= state.filterDateFrom);
+  if(state.filterDateTo) list = list.filter(m=> m.dateReunion && m.dateReunion <= state.filterDateTo);
+
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  list.sort((a,b)=>{
+    let va, vb;
+    if(state.sortCol === 'lieu'){ va=(a.lieu||'').toLowerCase(); vb=(b.lieu||'').toLowerCase(); }
+    else if(state.sortCol === 'createdBy'){ va=(a.createdBy||'').toLowerCase(); vb=(b.createdBy||'').toLowerCase(); }
+    else { va = a.dateReunion || ''; vb = b.dateReunion || ''; }
+    if(va < vb) return -1*dir;
+    if(va > vb) return 1*dir;
+    return 0;
+  });
+
+  const respOptions = uniq(state.meetings.map(m=>m.createdBy));
+
+  return `
+  <div class="topline">
+    <div>
+      <h1>Fiches de rencontre</h1>
+      <p>Retrouvez l'ensemble des rencontres enregistrées par les responsables régionaux, planifiées ou déjà tenues.</p>
+    </div>
+    <button class="btn btn-teal" data-action="new-meeting">+ Nouvelle rencontre</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" data-filter="lieu" placeholder="Filtrer par lieu…" value="${escapeHtml(state.filterLieu)}">
+    <input type="date" data-filter="dateFrom" title="Du" value="${state.filterDateFrom}">
+    <input type="date" data-filter="dateTo" title="Au" value="${state.filterDateTo}">
+    <select data-filter="resp">
+      <option value="">Tous les responsables</option>
+      ${respOptions.map(n=>`<option value="${escapeHtml(n)}" ${state.filterResp===n?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+    </select>
+    <select data-filter="statut">
+      <option value="">Tous les statuts</option>
+      <option value="planifiee" ${state.filterStatut==='planifiee'?'selected':''}>Planifiée</option>
+      <option value="complete" ${state.filterStatut==='complete'?'selected':''}>Compte rendu réalisé</option>
+    </select>
+    ${(state.filterLieu || state.filterDateFrom || state.filterDateTo || state.filterResp || state.filterStatut) ? `<button class="btn btn-ghost btn-sm" data-action="reset-filters">✕ Réinitialiser les filtres</button>` : ''}
+  </div>
+
+  <div class="card" style="padding:0;">
+    ${list.length ? `
+    <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="cursor:pointer;user-select:none;" data-sort-col="dateReunion">Date ${sortIndicator('dateReunion')}</th>
+        <th style="cursor:pointer;user-select:none;" data-sort-col="lieu">Lieu ${sortIndicator('lieu')}</th>
+        <th style="cursor:pointer;user-select:none;" data-sort-col="createdBy">Rédigé par ${sortIndicator('createdBy')}</th>
+        <th>Participants</th><th>Répartition</th><th>Statut</th><th>Actions ouvertes</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${list.map(m=>{
+          const openActions = m.actions.filter(a=>a.statut!==STATUTS_ACTION.FAIT).length;
+          const lateCount = m.actions.filter(isLate).length;
+          return `<tr>
+            <td>${fmtDate(m.dateReunion)}${m.heureReunion? '<br><span style="color:var(--ink-soft);font-size:12px;">'+escapeHtml(m.heureReunion)+'</span>':''}</td>
+            <td>${escapeHtml(m.lieu)}</td>
+            <td>${escapeHtml(m.createdBy)}</td>
+            <td>${escapeHtml(participantNoms(m).join(', ') || '—')}</td>
+            <td>${breakdownBadgesHtml(m)}</td>
+            <td>${statusBadge(m)}</td>
+            <td>${openActions ? openActions + (lateCount? ' <span class="badge badge-late">'+lateCount+' en retard</span>':'') : '—'}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost btn-sm" data-action="edit-meeting" data-id="${m.id}">Ouvrir</button>
+                <button class="btn btn-ghost btn-sm" data-action="pdf-meeting" data-id="${m.id}">PDF</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>` : `<div class="empty"><span class="serif">Aucune fiche pour l'instant</span>Créez votre première rencontre pour commencer le suivi.</div>`}
+  </div>`;
+}
+
+function uniq(arr){ return [...new Set(arr)].filter(Boolean); }
+
+function viewSaisie(){
+  const f = state.form;
+  const internes = personnesInternesToutes();
+  return `
+  <div class="topline">
+    <div>
+      <h1>${state.editingId ? 'Modifier la fiche' : 'Nouvelle rencontre'}</h1>
+      <p>Renseignez d'abord les informations de la réunion. Le compte rendu et les actions peuvent être complétés plus tard.</p>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step ${state.formStep===1?'current':''}" data-goto-step="1"><b>Étape 1</b>Informations de la réunion</div>
+    <div class="step ${state.formStep===2?'current':''}" data-goto-step="2"><b>Étape 2</b>Compte rendu &amp; actions</div>
+  </div>
+
+  ${state.formStep===1 ? `
+  <div class="card">
+    <div class="grid2">
+      <div class="field">
+        <label>Date de la réunion *</label>
+        <input type="date" data-f="dateReunion" value="${f.dateReunion}">
+      </div>
+      <div class="field">
+        <label>Heure (optionnel)</label>
+        <input type="time" data-f="heureReunion" value="${f.heureReunion}">
+      </div>
+    </div>
+    <div class="field">
+      <label>Lieu de la réunion *</label>
+      <input type="text" data-f="lieu" value="${escapeHtml(f.lieu)}" placeholder="Ex. Agence de Lyon, visioconférence…">
+    </div>
+    <div class="field">
+      <label>Participants internes (${f.participantsInternes.length} sélectionné(s) au total)</label>
+      <div class="steps" style="margin-bottom:12px;">
+        ${CATEGORIES.map(c=>{
+          const list = internes.filter(p=>p.categorie===c.key);
+          const nbSel = list.filter(p=>f.participantsInternes.some(x=>x.nom===p.nom)).length;
+          return `<div class="step ${state.saisiePartTab===c.key?'current':''}" data-part-tab="${c.key}" style="cursor:pointer;">
+            <b>${c.label}</b>${nbSel ? nbSel+' sélectionné(s)' : list.length+' personne(s)'}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="chip-list">
+        ${internes.filter(p=>p.categorie===state.saisiePartTab).map(p=>`<label class="chip ${f.participantsInternes.some(x=>x.nom===p.nom)?'checked':''}">
+          <input type="checkbox" data-chip-interne="${escapeHtml(p.nom)}" data-chip-cat="${p.categorie}" ${f.participantsInternes.some(x=>x.nom===p.nom)?'checked':''}> ${escapeHtml(p.nom)}
+        </label>`).join('') || '<div class="hint">Aucune personne dans cette catégorie pour le moment — ajoutez-la depuis Paramètres › Personnes internes.</div>'}
+      </div>
+      <div class="hint">Les catégories et les noms sont gérés dans l'onglet Paramètres.</div>
+    </div>
+    <div class="field">
+      <label>Participants externes (contacts hors organisation)</label>
+      <textarea data-f="participantsExternes" placeholder="Un contact par ligne, ex. : Jean Dupont — Client ABC">${escapeHtml(f.participantsExternes)}</textarea>
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-ghost" data-action="cancel-saisie">Annuler</button>
+      <button class="btn btn-primary" data-action="goto-step2">Continuer →</button>
+    </div>
+  </div>` : `
+  <div class="card">
+    <div class="field">
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <span>Compte rendu synthétique</span>
+        <button type="button" class="btn ${state.dictationActive?'btn-rust':'btn-ghost'} btn-sm" data-action="toggle-dictation">
+          ${state.dictationActive ? '⏺ Arrêter la dictée' : '🎤 Dicter le texte'}
+        </button>
+      </label>
+      <textarea id="compteRenduTextarea" data-f="compteRendu" placeholder="Résumé des échanges, décisions prises…" style="min-height:150px;">${escapeHtml(f.compteRendu)}</textarea>
+      <div class="hint">Laissez vide si la réunion n'a pas encore eu lieu : la fiche restera au statut « planifiée ». La dictée vocale utilise le micro du navigateur (Chrome recommandé) et fonctionne en français.</div>
+    </div>
+    <div class="field">
+      <label>Actions à mener</label>
+      ${f.actions.map((a,i)=>`
+        <div class="action-row">
+          <div class="grid3">
+            <div class="field" style="margin-bottom:8px;">
+              <label>Action</label>
+              <input type="text" data-act-field="description" data-act-id="${a.id}" value="${escapeHtml(a.description)}" placeholder="Description de l'action">
+            </div>
+            <div class="field" style="margin-bottom:8px;">
+              <label>Responsable de l'action</label>
+              <select data-act-field="responsable" data-act-id="${a.id}">
+                <option value="">—</option>
+                ${internes.map(p=>`<option value="${escapeHtml(p.nom)}" ${a.responsable===p.nom?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field" style="margin-bottom:8px;">
+              <label>Date butoir</label>
+              <input type="date" data-act-field="dateButoir" data-act-id="${a.id}" value="${a.dateButoir}">
+            </div>
+          </div>
+          <div class="row-actions" style="justify-content:space-between;align-items:center;">
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-soft);font-weight:500;">
+              <input type="checkbox" data-act-field="statut" data-act-id="${a.id}" ${a.statut===STATUTS_ACTION.FAIT?'checked':''}> Action réalisée
+            </label>
+            <button class="btn btn-rust btn-sm" data-action="remove-action" data-id="${a.id}">Retirer</button>
+          </div>
+        </div>`).join('')}
+      <button class="btn btn-ghost btn-sm" data-action="add-action">+ Ajouter une action</button>
+    </div>
+    <div class="row-actions" style="margin-top:10px;">
+      <button class="btn btn-ghost" data-action="goto-step1">← Retour</button>
+      <button class="btn btn-primary" data-action="submit-form">Enregistrer la fiche</button>
+    </div>
+  </div>`}
+  `;
+}
+
+function viewPlanning(){
+  const sorted = state.meetings.slice().sort((a,b)=> new Date(a.dateReunion) - new Date(b.dateReunion));
+  const groups = {};
+  sorted.forEach(m=>{
+    if(!m.dateReunion) return;
+    const d = new Date(m.dateReunion);
+    const key = d.toLocaleDateString('fr-FR',{month:'long', year:'numeric'});
+    groups[key] = groups[key] || [];
+    groups[key].push(m);
+  });
+  const keys = Object.keys(groups);
+  return `
+  <div class="topline">
+    <div>
+      <h1>Planning des rencontres</h1>
+      <p>Vue chronologique de toutes les rencontres planifiées et tenues, tous responsables confondus.</p>
+    </div>
+  </div>
+  ${keys.length ? keys.map(k=>`
+    <div class="planning-month">
+      <h3>${escapeHtml(k)}</h3>
+      <div class="card" style="padding:6px 20px;">
+        ${groups[k].map(m=>{
+          const d = new Date(m.dateReunion);
+          return `<div class="plan-item">
+            <div class="plan-date"><div class="d">${d.getDate()}</div><div class="m">${d.toLocaleDateString('fr-FR',{month:'short'})}</div></div>
+            <div class="plan-info" style="flex:1;">
+              <b>${escapeHtml(m.lieu||'Lieu non défini')}</b> — ${escapeHtml(m.createdBy)}
+              <div class="meta">${escapeHtml(participantNoms(m).join(', ')||'—')} ${statusBadge(m)}</div>
+              <div class="meta" style="margin-top:4px;">${breakdownBadgesHtml(m)}</div>
+            </div>
+            <div class="row-actions" style="align-items:center;">
+              <button class="btn btn-ghost btn-sm" data-action="edit-meeting" data-id="${m.id}">Ouvrir</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('') : `<div class="card"><div class="empty"><span class="serif">Aucune rencontre planifiée</span>Créez une rencontre pour la voir apparaître ici.</div></div>`}
+  `;
+}
+
+function viewStats(){
+  const total = state.meetings.length;
+  const allActions = state.meetings.flatMap(m=>m.actions);
+  const doneActions = allActions.filter(a=>a.statut===STATUTS_ACTION.FAIT).length;
+  const lateActions = allActions.filter(isLate).length;
+  return `
+  <div class="topline">
+    <div>
+      <h1>Statistiques</h1>
+      <p>Vue d'ensemble de l'activité de rencontre des responsables régionaux.</p>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card kpi"><div class="num">${total}</div><div class="lbl">Rencontres enregistrées</div></div>
+    <div class="card kpi"><div class="num">${allActions.length}</div><div class="lbl">Actions décidées (${doneActions} réalisées)</div></div>
+    <div class="card kpi"><div class="num" style="color:${lateActions? 'var(--rust)':'var(--navy)'}">${lateActions}</div><div class="lbl">Actions en retard</div></div>
+  </div>
+  <div class="grid2" style="margin-top:18px;">
+    <div class="card"><h3 style="margin-bottom:14px;">Rencontres par responsable</h3><canvas id="chartResp" height="220"></canvas></div>
+    <div class="card"><h3 style="margin-bottom:14px;">Statut des actions</h3><canvas id="chartActions" height="220"></canvas></div>
+  </div>
+  <div class="grid2" style="margin-top:18px;">
+    <div class="card"><h3 style="margin-bottom:14px;">Répartition par lieu</h3><canvas id="chartLieu" height="220"></canvas></div>
+    <div class="card"><h3 style="margin-bottom:14px;">Fréquence dans le temps</h3><canvas id="chartFreq" height="220"></canvas></div>
+  </div>
+  `;
+}
+
+let chartInstances = [];
+function mountCharts(){
+  chartInstances.forEach(c=>c.destroy());
+  chartInstances = [];
+  const palette = ['#1f2a3c','#3c6e6e','#a98237','#b5533c','#6c7a93','#8aa6a6'];
+
+  // Par responsable
+  const byResp = {};
+  state.meetings.forEach(m=>{ byResp[m.createdBy] = (byResp[m.createdBy]||0)+1; });
+  const ctx1 = document.getElementById('chartResp');
+  if(ctx1){
+    chartInstances.push(new Chart(ctx1, {
+      type:'bar',
+      data:{ labels:Object.keys(byResp), datasets:[{ data:Object.values(byResp), backgroundColor:'#3c6e6e', borderRadius:5 }] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}} }
+    }));
+  }
+
+  // Actions statut
+  const allActions = state.meetings.flatMap(m=>m.actions);
+  const done = allActions.filter(a=>a.statut===STATUTS_ACTION.FAIT).length;
+  const late = allActions.filter(isLate).length;
+  const pending = allActions.length - done - late;
+  const ctx2 = document.getElementById('chartActions');
+  if(ctx2){
+    chartInstances.push(new Chart(ctx2, {
+      type:'doughnut',
+      data:{ labels:['Réalisées','À faire','En retard'], datasets:[{ data:[done,pending,late], backgroundColor:['#3c6e6e','#a98237','#b5533c'] }] },
+      options:{ plugins:{legend:{position:'bottom'}} }
+    }));
+  }
+
+  // Par lieu
+  const byLieu = {};
+  state.meetings.forEach(m=>{ const l = m.lieu || 'Non renseigné'; byLieu[l]=(byLieu[l]||0)+1; });
+  const ctx3 = document.getElementById('chartLieu');
+  if(ctx3){
+    chartInstances.push(new Chart(ctx3, {
+      type:'bar',
+      data:{ labels:Object.keys(byLieu), datasets:[{ data:Object.values(byLieu), backgroundColor:'#a98237', borderRadius:5 }] },
+      options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, ticks:{precision:0}}} }
+    }));
+  }
+
+  // Fréquence par mois
+  const byMonth = {};
+  state.meetings.forEach(m=>{
+    if(!m.dateReunion) return;
+    const d = new Date(m.dateReunion);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    byMonth[key] = (byMonth[key]||0)+1;
+  });
+  const sortedMonths = Object.keys(byMonth).sort();
+  const ctx4 = document.getElementById('chartFreq');
+  if(ctx4){
+    chartInstances.push(new Chart(ctx4, {
+      type:'line',
+      data:{ labels:sortedMonths, datasets:[{ data:sortedMonths.map(k=>byMonth[k]), borderColor:'#1f2a3c', backgroundColor:'rgba(31,42,60,.12)', fill:true, tension:.25 }] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}} }
+    }));
+  }
+}
+
+function viewParametres(){
+  const tabs = [['responsables','Responsables'],['internes','Personnes internes'],['emails','E-mails & entreprise']];
+  return `
+  <div class="topline">
+    <div>
+      <h1>Paramètres</h1>
+      <p>Gérez la liste des responsables, des personnes internes et les destinataires des notifications.</p>
+    </div>
+  </div>
+  <div class="steps">
+    ${tabs.map(([k,l])=>`<div class="step ${state.paramsTab===k?'current':''}" data-params-tab="${k}" style="cursor:pointer;"><b>${l}</b></div>`).join('')}
+  </div>
+
+  ${state.paramsTab==='responsables' ? `
+  <div class="card">
+    <div class="card" style="background:var(--sand);border-style:dashed;margin-bottom:16px;padding:16px 18px;">
+      <label style="margin-bottom:8px;">Import en masse depuis un fichier (.txt ou .csv)</label>
+      <div class="row-actions" style="align-items:center;">
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+          📄 Choisir un fichier…
+          <input type="file" id="importRespFileInput" accept=".txt,.csv,text/plain,text/csv" style="display:none;">
+        </label>
+      </div>
+      <div class="hint" style="margin-top:8px;">
+        Format .csv attendu, une ligne par responsable : <code>nom;code;email</code> (ex. <code>Jacques SIMONIN;1009;j.simonin@organisation.fr</code>). Le code et l'e-mail peuvent être laissés vides et complétés ensuite dans le tableau. Un simple fichier .txt avec un nom par ligne fonctionne aussi (code et e-mail à compléter manuellement). Les doublons (nom déjà présent) sont ignorés.
+      </div>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nom</th><th>Code personnel</th><th>E-mail</th><th>Administrateur</th><th></th></tr></thead>
+      <tbody>
+        ${state.responsables.map(r=>`<tr>
+          <td><input type="text" data-resp-field="nom" data-resp-id="${r.id}" value="${escapeHtml(r.nom)}"></td>
+          <td><input type="text" data-resp-field="code" data-resp-id="${r.id}" value="${escapeHtml(r.code)}"></td>
+          <td><input type="email" data-resp-field="email" data-resp-id="${r.id}" value="${escapeHtml(r.email)}" placeholder="prenom.nom@organisation.fr"></td>
+          <td style="text-align:center;"><input type="checkbox" data-resp-field="isAdmin" data-resp-id="${r.id}" ${r.isAdmin?'checked':''}></td>
+          <td><button class="btn btn-rust btn-sm" data-action="remove-resp" data-id="${r.id}">Retirer</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div class="hint" style="margin-top:10px;">Cochez « Administrateur » pour les personnes qui doivent avoir accès à cet onglet Paramètres. Tant qu'aucun administrateur n'est défini, tout le monde y a accès (démarrage initial) ; dès qu'un premier est coché, l'accès se restreint automatiquement aux seuls administrateurs.</div>
+    <div class="row-actions" style="margin-top:14px;">
+      <button class="btn btn-ghost btn-sm" data-action="add-resp">+ Ajouter un responsable</button>
+      <button class="btn btn-primary btn-sm" data-action="save-resp">Enregistrer</button>
+    </div>
+  </div>` : ''}
+
+  ${state.paramsTab==='internes' ? `
+  <div class="card">
+    <p class="hint" style="margin-top:-4px;margin-bottom:12px;">
+      Les 8 responsables (onglet « Responsables ») sont automatiquement comptés comme « Salariés de l'entreprise ».
+      Ajoutez ici les élus des 3 zones, ainsi que d'éventuels salariés supplémentaires. Un élu n'appartient qu'à une seule zone.
+    </p>
+    <div class="card" style="background:var(--sand);border-style:dashed;margin-bottom:16px;padding:16px 18px;">
+      <label style="margin-bottom:8px;">Import en masse depuis un fichier (.txt ou .csv)</label>
+      <div class="filters" style="margin-bottom:0;align-items:center;">
+        <select id="importCatSelect">
+          ${CATEGORIES.map(c=>`<option value="${c.key}" ${(state.paramsInternesFilter||'nord')===c.key?'selected':''}>${c.label}</option>`).join('')}
+        </select>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+          📄 Choisir un fichier…
+          <input type="file" id="importFileInput" accept=".txt,.csv,text/plain,text/csv" style="display:none;">
+        </label>
+      </div>
+      <div class="hint" style="margin-top:8px;">
+        Un nom par ligne (fichier .txt), ou format .csv <code>nom;catégorie</code> par ligne (ex. <code>Paul ABADIE;sud</code>). Si la catégorie n'est pas précisée dans le fichier, la catégorie choisie ci-dessus est appliquée à toute la liste importée. Les doublons (nom déjà présent) sont ignorés automatiquement.
+      </div>
+    </div>
+    <div class="filters">
+      <select data-filter="internesCat">
+        <option value="">Toutes les catégories</option>
+        ${CATEGORIES.map(c=>`<option value="${c.key}" ${state.paramsInternesFilter===c.key?'selected':''}>${c.label}</option>`).join('')}
+      </select>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nom</th><th>Catégorie</th><th></th></tr></thead>
+      <tbody>
+        ${state.internes.filter(p=> !state.paramsInternesFilter || p.categorie===state.paramsInternesFilter || (!p.categorie && state.paramsInternesFilter==='salarie')).map(p=>`<tr>
+          <td><input type="text" data-int-field="nom" data-int-id="${p.id}" value="${escapeHtml(p.nom)}"></td>
+          <td>
+            <select data-int-field="categorie" data-int-id="${p.id}">
+              ${CATEGORIES.map(c=>`<option value="${c.key}" ${(p.categorie||'salarie')===c.key?'selected':''}>${c.label}</option>`).join('')}
+            </select>
+          </td>
+          <td><button class="btn btn-rust btn-sm" data-action="remove-int" data-id="${p.id}">Retirer</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+    <div class="row-actions" style="margin-top:14px;">
+      <button class="btn btn-ghost btn-sm" data-action="add-int">+ Ajouter une personne</button>
+      <button class="btn btn-primary btn-sm" data-action="save-int">Enregistrer</button>
+    </div>
+  </div>` : ''}
+
+  ${state.paramsTab==='emails' ? `
+  <div class="card">
+    <div class="field">
+      <label>Nom de l'organisation (en-tête des PDF)</label>
+      <input type="text" id="entrepriseInput" value="${escapeHtml(state.nomEntreprise)}">
+    </div>
+    <label>Adresses e-mail notifiées à chaque nouvelle fiche</label>
+    ${[0,1,2].map(i=>`<div class="field"><input type="email" data-email-idx="${i}" value="${escapeHtml(state.emailsNotif[i]||'')}" placeholder="adresse${i+1}@organisation.fr"></div>`).join('')}
+    <button class="btn btn-primary btn-sm" data-action="save-emails">Enregistrer</button>
+  </div>` : ''}
+  `;
+}
+
+/* ---------------- Event delegation ---------------- */
+document.addEventListener('click', async (e)=>{
+  const t = e.target.closest('[data-action],[data-nav],[data-goto-step],[data-params-tab],[data-part-tab],[data-sort-col]');
+  if(!t) return;
+
+  if(t.dataset.sortCol){
+    if(state.sortCol === t.dataset.sortCol){ state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; }
+    else { state.sortCol = t.dataset.sortCol; state.sortDir = 'asc'; }
+    render();
+    return;
+  }
+
+  if(t.dataset.partTab){ state.saisiePartTab = t.dataset.partTab; render(); return; }
+  if(t.dataset.nav){
+    if(t.dataset.nav==='saisie'){ startNewMeeting(); return; }
+    if(t.dataset.nav==='parametres' && !isCurrentUserAdmin()){
+      showToast('Accès réservé à l\'administrateur.');
+      return;
+    }
+    state.view = t.dataset.nav;
+    render();
+    return;
+  }
+  if(t.dataset.gotoStep){ state.formStep = Number(t.dataset.gotoStep); render(); return; }
+  if(t.dataset.paramsTab){ state.paramsTab = t.dataset.paramsTab; render(); return; }
+
+  const a = t.dataset.action;
+  if(a==='logout'){ logout(); return; }
+  if(a==='new-meeting'){ startNewMeeting(); return; }
+  if(a==='reset-filters'){
+    state.filterResp=''; state.filterStatut=''; state.filterLieu=''; state.filterDateFrom=''; state.filterDateTo='';
+    render(); return;
+  }
+  if(a==='edit-meeting'){ openMeetingForEdit(t.dataset.id); return; }
+  if(a==='pdf-meeting'){ const m = state.meetings.find(x=>x.id===t.dataset.id); if(m) await generatePDF(m); return; }
+  if(a==='cancel-saisie'){ stopDictation(); state.form=null; state.editingId=null; state.view='liste'; render(); return; }
+  if(a==='goto-step2'){
+    if(!state.form.dateReunion || !state.form.lieu){ showToast('Renseignez la date et le lieu avant de continuer.'); return; }
+    state.formStep = 2; render(); return;
+  }
+  if(a==='goto-step1'){ stopDictation(); state.formStep = 1; render(); return; }
+  if(a==='add-action'){ addActionRow(); return; }
+  if(a==='remove-action'){ removeActionRow(t.dataset.id); return; }
+  if(a==='toggle-dictation'){ toggleDictation(); return; }
+  if(a==='submit-form'){ stopDictation(); await submitForm(true); return; }
+
+  if(a==='add-resp'){ state.responsables.push({id:uid('resp'), nom:'Nouveau responsable', code:'', email:'', isAdmin:false}); render(); return; }
+  if(a==='remove-resp'){ state.responsables = state.responsables.filter(r=>r.id!==t.dataset.id); render(); return; }
+  if(a==='save-resp'){ await saveResponsables(); showToast('Liste des responsables enregistrée.'); return; }
+
+  if(a==='add-int'){ state.internes.push({id:uid('int'), nom:'Nouvelle personne', categorie: state.paramsInternesFilter || 'nord'}); render(); return; }
+  if(a==='remove-int'){ state.internes = state.internes.filter(p=>p.id!==t.dataset.id); render(); return; }
+  if(a==='save-int'){ await saveInternes(); showToast('Liste des personnes internes enregistrée.'); return; }
+
+  if(a==='save-emails'){
+    state.nomEntreprise = document.getElementById('entrepriseInput').value.trim() || 'Votre Organisation';
+    await saveEntreprise();
+    await saveEmailsNotif();
+    showToast('Paramètres enregistrés.');
+    return;
+  }
+});
+
+/**
+ * Synchronise un champ de saisie (texte, select, checkbox) vers le state.
+ * Appelée à la fois sur 'input' (à chaque frappe) et 'change' (perte de focus,
+ * sélection), pour ne jamais perdre une saisie non "blurrée" avant qu'un
+ * re-rendu ne survienne (ex. clic sur un bouton qui ne redonne pas le focus
+ * dans tous les navigateurs). Retourne true si le champ a été traité.
+ */
+function syncField(el){
+  const value = (el.type === 'checkbox') ? el.checked : el.value;
+  if(el.dataset.f !== undefined){ state.form[el.dataset.f] = value; return true; }
+  if(el.dataset.respField){
+    const r = state.responsables.find(x=>x.id===el.dataset.respId);
+    if(r) r[el.dataset.respField] = value;
+    return true;
+  }
+  if(el.dataset.intField){
+    const p = state.internes.find(x=>x.id===el.dataset.intId);
+    if(p) p[el.dataset.intField] = value;
+    return true;
+  }
+  if(el.dataset.actField){
+    const act = state.form.actions.find(a=>a.id===el.dataset.actId);
+    if(!act) return true;
+    if(el.dataset.actField==='statut'){ act.statut = el.checked ? STATUTS_ACTION.FAIT : STATUTS_ACTION.A_FAIRE; }
+    else { act[el.dataset.actField] = value; }
+    return true;
+  }
+  if(el.dataset.emailIdx !== undefined){
+    state.emailsNotif[Number(el.dataset.emailIdx)] = value;
+    return true;
+  }
+  return false;
+}
+
+/* Synchronise à chaque frappe : évite toute perte de saisie si un clic
+   ailleurs (bouton "Ajouter", etc.) ne déclenche pas de blur/change dans
+   certains navigateurs avant qu'un re-rendu n'écrase le DOM. */
+document.addEventListener('input', (e)=>{ syncField(e.target); });
+
+document.addEventListener('change', async (e)=>{
+  const el = e.target;
+
+  if(el.id==='loginSelect'){ state.loginSelected = el.value; return; }
+  if(el.id==='loginCode'){ state.loginCode = el.value; return; }
+
+  if(el.id==='importFileInput'){
+    const file = el.files && el.files[0];
+    if(!file) return;
+    const catSelect = document.getElementById('importCatSelect');
+    const defaultCat = (catSelect && catSelect.value) || 'nord';
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      const {added, skipped} = parseImportFile(String(ev.target.result||''), defaultCat);
+      await saveInternes();
+      render();
+      showToast(added + ' personne(s) importée(s)' + (skipped ? ', ' + skipped + ' doublon(s) ignoré(s)' : '') + '.');
+    };
+    reader.onerror = ()=>{ showToast('Impossible de lire ce fichier.'); };
+    reader.readAsText(file, 'UTF-8');
+    el.value = '';
+    return;
+  }
+
+  if(el.id==='importRespFileInput'){
+    const file = el.files && el.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      const {added, skipped} = parseResponsablesImport(String(ev.target.result||''));
+      await saveResponsables();
+      render();
+      showToast(added + ' responsable(s) importé(s)' + (skipped ? ', ' + skipped + ' doublon(s) ignoré(s)' : '') + '.');
+    };
+    reader.onerror = ()=>{ showToast('Impossible de lire ce fichier.'); };
+    reader.readAsText(file, 'UTF-8');
+    el.value = '';
+    return;
+  }
+
+  if(el.dataset.respField==='isAdmin'){ syncField(el); render(); return; }
+  if(syncField(el)) return;
+
+  if(el.dataset.chipInterne){
+    const nom = el.dataset.chipInterne;
+    const cat = el.dataset.chipCat || 'salarie';
+    if(el.checked){ if(!state.form.participantsInternes.some(p=>p.nom===nom)) state.form.participantsInternes.push({nom, categorie:cat}); }
+    else { state.form.participantsInternes = state.form.participantsInternes.filter(p=>p.nom!==nom); }
+    render();
+    return;
+  }
+  if(el.dataset.filter==='resp'){ state.filterResp = el.value; render(); return; }
+  if(el.dataset.filter==='statut'){ state.filterStatut = el.value; render(); return; }
+  if(el.dataset.filter==='lieu'){ state.filterLieu = el.value; render(); return; }
+  if(el.dataset.filter==='dateFrom'){ state.filterDateFrom = el.value; render(); return; }
+  if(el.dataset.filter==='dateTo'){ state.filterDateTo = el.value; render(); return; }
+  if(el.dataset.filter==='internesCat'){ state.paramsInternesFilter = el.value; render(); return; }
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && (e.target.id==='loginCode' || e.target.id==='loginSelect')){
+    e.preventDefault();
+    attemptLogin();
+  }
+  if(e.key==='Enter' && e.target.dataset && e.target.dataset.filter==='lieu'){
+    e.preventDefault();
+    e.target.blur();
+  }
+});
+document.addEventListener('click', (e)=>{
+  if(e.target.id==='btnLogin') attemptLogin();
+});
+
+function render(){ renderApp(); }
+
+init();
+</script>
+</body>
+</html>
