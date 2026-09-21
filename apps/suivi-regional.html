@@ -794,10 +794,7 @@ function statusBadge(m){
 
 /* ---------------- Views ---------------- */
 function storageWarningBanner(){
-  if(dbCap) return '';
-  return `<div style="background:var(--rust-soft);color:var(--rust);border:1px solid #e3c3b8;border-radius:9px;padding:11px 16px;margin-bottom:18px;font-size:13px;">
-    ⚠️ Les données ne seront <b>pas sauvegardées durablement</b> dans ce contexte. Pour un usage réel avec vos 8 responsables, ouvrez et utilisez le lien de l'application <b>publiée</b> (bouton « Publish » / lien claude.ai partagé), pas le fichier téléchargé en local.
-  </div>`;
+  return ''; // Le stockage Supabase est toujours actif, plus besoin d'avertissement.
 }
 
 function renderApp(){
@@ -862,7 +859,6 @@ function viewLogin(){
     <div class="login-card">
       <div class="mark">Suivi Régional</div>
       <div class="sub">Identifiez-vous pour accéder à vos fiches de rencontre.</div>
-      ${!dbCap ? `<div style="background:#fbeee8;color:var(--rust);border:1px solid #e3c3b8;border-radius:8px;padding:9px 12px;font-size:12.5px;margin-bottom:14px;">⚠️ Données non sauvegardées dans ce contexte — utilisez le lien de l'application publiée.</div>` : ''}
       <div class="field">
         <label for="loginSelect">Votre nom</label>
         <select id="loginSelect">
