@@ -25,6 +25,7 @@ const logoutBtn = document.getElementById("logout-btn");
   const { data: apps, error } = await sbClient
     .from("user_apps")
     .select("*")
+    .eq("user_id", session.user.id)
     .order("name");
 
   if (error) {
