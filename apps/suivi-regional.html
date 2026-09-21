@@ -1417,7 +1417,11 @@ function syncField(el){
 /* Synchronise à chaque frappe : évite toute perte de saisie si un clic
    ailleurs (bouton "Ajouter", etc.) ne déclenche pas de blur/change dans
    certains navigateurs avant qu'un re-rendu n'écrase le DOM. */
-document.addEventListener('input', (e)=>{ syncField(e.target); });
+document.addEventListener('input', (e)=>{
+  const el = e.target;
+  if(el.id==='loginCode'){ state.loginCode = el.value; return; }
+  syncField(el);
+});
 
 document.addEventListener('change', async (e)=>{
   const el = e.target;
