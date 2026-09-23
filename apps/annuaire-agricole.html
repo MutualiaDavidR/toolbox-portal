@@ -770,6 +770,19 @@
                 return;
             }
 
+            // Vérifie si CETTE application est placée en maintenance dans le portail,
+            // même en y accédant directement par un lien.
+            const fileName = window.location.pathname.split('/').pop();
+            const { data: appRow } = await sbClient
+                .from('apps')
+                .select('name, maintenance')
+                .ilike('url', '%' + fileName)
+                .maybeSingle();
+            if (appRow && appRow.maintenance) {
+                window.location.href = '../maintenance.html?app=' + encodeURIComponent(appRow.name || 'Application');
+                return;
+            }
+
             await chargerDonneesLocales();
             // Si pas de données, charger les données de démo
             if (database.personnes.length === 0) {

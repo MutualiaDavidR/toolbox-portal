@@ -246,6 +246,20 @@ async function initCapabilities(){
     window.location.href = "../index.html";
     return;
   }
+
+  // Vérifie si CETTE application est placée en maintenance dans le portail,
+  // même si on y accède directement par un lien (pas seulement via le dashboard).
+  const fileName = window.location.pathname.split('/').pop();
+  const { data: appRow } = await sbClient
+    .from('apps')
+    .select('name, maintenance')
+    .ilike('url', '%' + fileName)
+    .maybeSingle();
+  if(appRow && appRow.maintenance){
+    window.location.href = '../maintenance.html?app=' + encodeURIComponent(appRow.name || 'Application');
+    return;
+  }
+
   capabilitiesReady = true;
 }
 
