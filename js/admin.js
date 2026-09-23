@@ -199,7 +199,7 @@ const appsTbody = document.getElementById("apps-tbody");
 
 function renderAppsTable() {
   if (allApps.length === 0) {
-    appsTbody.innerHTML = `<tr><td colspan="5">Aucune application.</td></tr>`;
+    appsTbody.innerHTML = `<tr><td colspan="6">Aucune application.</td></tr>`;
     return;
   }
 
@@ -209,6 +209,9 @@ function renderAppsTable() {
       <td>${app.name}</td>
       <td>${app.description || ""}</td>
       <td><a href="${app.url}" target="_blank" rel="noopener">${app.url}</a></td>
+      <td style="text-align:center">
+        <input type="checkbox" data-maintenance-toggle data-app="${app.id}" ${app.maintenance ? "checked" : ""}>
+      </td>
       <td class="row-actions">
         <button data-edit-app="${app.id}">Éditer</button>
         <button data-delete-app="${app.id}" class="danger">Supprimer</button>
@@ -221,6 +224,19 @@ function renderAppsTable() {
   });
   appsTbody.querySelectorAll("[data-delete-app]").forEach(btn => {
     btn.addEventListener("click", () => deleteApp(parseInt(btn.dataset.deleteApp)));
+  });
+  appsTbody.querySelectorAll("[data-maintenance-toggle]").forEach(cb => {
+    cb.addEventListener("change", async () => {
+      const appId = parseInt(cb.dataset.app);
+      const { error } = await sbClient.from("apps").update({ maintenance: cb.checked }).eq("id", appId);
+      if (error) {
+        alert(error.message || "Erreur lors de la mise à jour.");
+        cb.checked = !cb.checked;
+        return;
+      }
+      const app = allApps.find(a => a.id === appId);
+      if (app) app.maintenance = cb.checked;
+    });
   });
 }
 

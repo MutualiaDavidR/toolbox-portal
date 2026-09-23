@@ -21,7 +21,7 @@ const logoutBtn = document.getElementById("logout-btn");
   if (isAdmin) document.getElementById("admin-link").classList.remove("hidden");
 
   // Grâce à la RLS + la vue user_apps, cette requête ne renvoie
-  // QUE les apps auxquelles cet utilisateur a droit.
+  // QUE les apps auxquelles CET utilisateur précis a droit.
   const { data: apps, error } = await sbClient
     .from("user_apps")
     .select("*")
@@ -39,13 +39,24 @@ const logoutBtn = document.getElementById("logout-btn");
     return;
   }
 
-  grid.innerHTML = apps.map(app => `
-    <a class="app-card" href="${app.url}" target="_blank" rel="noopener">
-      <div class="app-icon">${app.icon || "🔧"}</div>
-      <div class="app-name">${app.name}</div>
-      <div class="app-desc">${app.description || ""}</div>
-    </a>
-  `).join("");
+  grid.innerHTML = apps.map(app => {
+    if (app.maintenance) {
+      return `
+        <a class="app-card app-card-disabled" href="maintenance.html?app=${encodeURIComponent(app.name)}">
+          <div class="app-icon">${app.icon || "🔧"}</div>
+          <div class="app-name">${app.name}</div>
+          <span class="maintenance-badge">🛠️ En maintenance</span>
+        </a>
+      `;
+    }
+    return `
+      <a class="app-card" href="${app.url}" target="_blank" rel="noopener">
+        <div class="app-icon">${app.icon || "🔧"}</div>
+        <div class="app-name">${app.name}</div>
+        <div class="app-desc">${app.description || ""}</div>
+      </a>
+    `;
+  }).join("");
 })();
 
 logoutBtn.addEventListener("click", async () => {

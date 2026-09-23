@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Application en maintenance</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .maintenance-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  .maintenance-box {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    max-width: 420px;
+  }
+  .maintenance-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .maintenance-box h1 { font-size: 1.3rem; margin-bottom: 0.75rem; }
+  .maintenance-box p { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+  .maintenance-box a {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 0.55rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+  <div class="maintenance-wrap">
+    <div class="maintenance-box">
+      <div class="maintenance-icon">🛠️</div>
+      <h1 id="app-title">Application en maintenance</h1>
+      <p>Cette application est temporairement indisponible le temps d'une mise à jour. Merci de réessayer un peu plus tard.</p>
+      <a href="dashboard.html">← Retour au portail</a>
+    </div>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const appName = params.get('app');
+    if (appName) {
+      document.getElementById('app-title').textContent = appName + ' — en maintenance';
+    }
+  </script>
+</body>
+</html>

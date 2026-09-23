@@ -128,3 +128,31 @@ main { padding: 2rem; }
 .app-icon { font-size: 2rem; margin-bottom: 0.5rem; }
 .app-name { font-weight: 600; margin-bottom: 0.25rem; }
 .app-desc { font-size: 0.85rem; color: var(--muted); }
+
+.app-card-disabled {
+  opacity: 0.75;
+  background: #f3f4f6;
+}
+
+.maintenance-badge {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.admin-btn {
+  background: var(--primary);
+  color: white;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.admin-btn:hover { background: var(--primary-dark); }
