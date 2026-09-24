@@ -8,14 +8,18 @@ section { margin-bottom: 2.5rem; }
   align-items: center;
 }
 
-.section-header button, #new-user-btn {
-  background: var(--primary);
+.section-header button, #new-user-btn,
+.modal-actions button:not(.btn-secondary) {
+  background: #16a34a;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   cursor: pointer;
 }
+
+.section-header button:hover, #new-user-btn:hover,
+.modal-actions button:not(.btn-secondary):hover { background: #15803d; }
 
 .admin-table {
   width: 100%;
