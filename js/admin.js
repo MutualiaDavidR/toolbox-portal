@@ -161,7 +161,7 @@ function renderUsersTable() {
 
 // ---------- Rendu : tableau accès par rôle ----------
 function renderRoleAccessTable() {
-  roleAccessThead.innerHTML = `<th>Rôle</th>` + allApps.map(a => `<th>${a.icon || ""} ${a.name}</th>`).join("");
+  roleAccessThead.innerHTML = `<th>Rôle</th>` + allApps.map(a => `<th>${a.icon || ""} ${a.name}</th>`).join("") + `<th>Actions</th>`;
 
   if (allRoles.length === 0) {
     roleAccessTbody.innerHTML = `<tr><td>Aucun rôle.</td></tr>`;
@@ -176,8 +176,20 @@ function renderRoleAccessTable() {
           ${current.has(app.id) ? "checked" : ""}>
       </td>
     `).join("");
-    return `<tr><td><strong>${role.name}</strong></td>${cells}</tr>`;
+    // Le rôle "Admin" est protégé : les droits d'administration dépendent de son nom
+    const actions = role.name === "Admin" ? "" : `
+      <button data-edit-role="${role.id}">Renommer</button>
+      <button data-delete-role="${role.id}" class="danger">Supprimer</button>
+    `;
+    return `<tr><td><strong>${role.name}</strong></td>${cells}<td class="row-actions">${actions}</td></tr>`;
   }).join("");
+
+  roleAccessTbody.querySelectorAll("[data-edit-role]").forEach(btn => {
+    btn.addEventListener("click", () => openRoleModal(parseInt(btn.dataset.editRole)));
+  });
+  roleAccessTbody.querySelectorAll("[data-delete-role]").forEach(btn => {
+    btn.addEventListener("click", () => deleteRole(parseInt(btn.dataset.deleteRole)));
+  });
 
   roleAccessTbody.querySelectorAll("[data-role-app-toggle]").forEach(cb => {
     cb.addEventListener("change", async () => {
@@ -320,6 +332,81 @@ async function deleteApp(appId) {
   }
   await loadAll();
   renderAppsTable();
+  renderUsersTable();
+  renderRoleAccessTable();
+}
+
+// ---------- Création / renommage / suppression de rôle ----------
+const roleModal = document.getElementById("role-modal");
+const roleModalTitle = document.getElementById("role-modal-title");
+const roleModalName = document.getElementById("role-modal-name");
+const roleModalError = document.getElementById("role-modal-error");
+let editingRoleId = null;
+
+document.getElementById("new-role-btn").addEventListener("click", () => openRoleModal(null));
+document.getElementById("role-modal-cancel-btn").addEventListener("click", closeRoleModal);
+
+function openRoleModal(roleId) {
+  editingRoleId = roleId;
+  roleModalError.textContent = "";
+
+  if (roleId) {
+    const role = allRoles.find(r => r.id === roleId);
+    roleModalTitle.textContent = "Renommer le rôle";
+    roleModalName.value = role?.name || "";
+  } else {
+    roleModalTitle.textContent = "Nouveau rôle";
+    roleModalName.value = "";
+  }
+  roleModal.classList.remove("hidden");
+  roleModalName.focus();
+}
+
+function closeRoleModal() {
+  roleModal.classList.add("hidden");
+}
+
+document.getElementById("role-modal-save-btn").addEventListener("click", async () => {
+  roleModalError.textContent = "";
+  const name = roleModalName.value.trim();
+
+  if (!name) {
+    roleModalError.textContent = "Le nom est requis.";
+    return;
+  }
+  if (name === "Admin") {
+    roleModalError.textContent = "Le nom \"Admin\" est réservé.";
+    return;
+  }
+
+  let error;
+  if (editingRoleId) {
+    ({ error } = await sbClient.from("roles").update({ name }).eq("id", editingRoleId));
+  } else {
+    ({ error } = await sbClient.from("roles").insert({ name }));
+  }
+
+  if (error) {
+    roleModalError.textContent = error.code === "23505"
+      ? "Un rôle porte déjà ce nom."
+      : (error.message || "Une erreur est survenue.");
+    return;
+  }
+
+  closeRoleModal();
+  await loadAll();
+  renderUsersTable();
+  renderRoleAccessTable();
+});
+
+async function deleteRole(roleId) {
+  if (!confirm("Supprimer définitivement ce rôle ? Il sera retiré de tous les utilisateurs, ainsi que les accès aux apps associés.")) return;
+  const { error } = await sbClient.from("roles").delete().eq("id", roleId);
+  if (error) {
+    alert(error.message || "Erreur lors de la suppression.");
+    return;
+  }
+  await loadAll();
   renderUsersTable();
   renderRoleAccessTable();
 }

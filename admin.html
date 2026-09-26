@@ -66,7 +66,10 @@
       </section>
 
       <section>
-        <h2>Accès par rôle</h2>
+        <div class="section-header">
+          <h2>Accès par rôle</h2>
+          <button id="new-role-btn">+ Nouveau rôle</button>
+        </div>
         <p class="muted">Cocher une case donne l'app à TOUS les utilisateurs ayant ce rôle.</p>
         <table class="admin-table" id="role-access-table">
           <thead><tr><th>Rôle</th></tr></thead>
@@ -112,6 +115,20 @@
         <button id="app-modal-save-btn">Enregistrer</button>
       </div>
       <div class="error" id="app-modal-error"></div>
+    </div>
+  </div>
+
+  <!-- Modale : créer / renommer un rôle -->
+  <div class="modal-overlay hidden" id="role-modal">
+    <div class="modal-box">
+      <h3 id="role-modal-title">Nouveau rôle</h3>
+      <label>Nom</label>
+      <input type="text" id="role-modal-name" placeholder="Ex: Compta">
+      <div class="modal-actions">
+        <button id="role-modal-cancel-btn" class="btn-secondary">Annuler</button>
+        <button id="role-modal-save-btn">Enregistrer</button>
+      </div>
+      <div class="error" id="role-modal-error"></div>
     </div>
   </div>
 
