@@ -125,13 +125,16 @@ function renderUsersTable() {
     cb.addEventListener("change", async () => {
       const userId = cb.dataset.user;
       const roleId = parseInt(cb.dataset.role);
-      if (cb.checked) {
-        await sbClient.from("user_roles").insert({ user_id: userId, role_id: roleId });
-        (userRolesMap[userId] ??= new Set()).add(roleId);
-      } else {
-        await sbClient.from("user_roles").delete().eq("user_id", userId).eq("role_id", roleId);
-        userRolesMap[userId]?.delete(roleId);
+      const { error } = cb.checked
+        ? await sbClient.from("user_roles").insert({ user_id: userId, role_id: roleId })
+        : await sbClient.from("user_roles").delete().eq("user_id", userId).eq("role_id", roleId);
+      if (error) {
+        alert(error.message || "Erreur lors de la mise à jour.");
+        cb.checked = !cb.checked;
+        return;
       }
+      if (cb.checked) (userRolesMap[userId] ??= new Set()).add(roleId);
+      else userRolesMap[userId]?.delete(roleId);
     });
   });
 
@@ -140,13 +143,16 @@ function renderUsersTable() {
     cb.addEventListener("change", async () => {
       const userId = cb.dataset.user;
       const appId = parseInt(cb.dataset.app);
-      if (cb.checked) {
-        await sbClient.from("app_access_user").insert({ user_id: userId, app_id: appId });
-        (userAppAccessMap[userId] ??= new Set()).add(appId);
-      } else {
-        await sbClient.from("app_access_user").delete().eq("user_id", userId).eq("app_id", appId);
-        userAppAccessMap[userId]?.delete(appId);
+      const { error } = cb.checked
+        ? await sbClient.from("app_access_user").insert({ user_id: userId, app_id: appId })
+        : await sbClient.from("app_access_user").delete().eq("user_id", userId).eq("app_id", appId);
+      if (error) {
+        alert(error.message || "Erreur lors de la mise à jour.");
+        cb.checked = !cb.checked;
+        return;
       }
+      if (cb.checked) (userAppAccessMap[userId] ??= new Set()).add(appId);
+      else userAppAccessMap[userId]?.delete(appId);
     });
   });
 
@@ -195,13 +201,16 @@ function renderRoleAccessTable() {
     cb.addEventListener("change", async () => {
       const roleId = parseInt(cb.dataset.role);
       const appId = parseInt(cb.dataset.app);
-      if (cb.checked) {
-        await sbClient.from("app_access_role").insert({ role_id: roleId, app_id: appId });
-        (roleAppAccessMap[roleId] ??= new Set()).add(appId);
-      } else {
-        await sbClient.from("app_access_role").delete().eq("role_id", roleId).eq("app_id", appId);
-        roleAppAccessMap[roleId]?.delete(appId);
+      const { error } = cb.checked
+        ? await sbClient.from("app_access_role").insert({ role_id: roleId, app_id: appId })
+        : await sbClient.from("app_access_role").delete().eq("role_id", roleId).eq("app_id", appId);
+      if (error) {
+        alert(error.message || "Erreur lors de la mise à jour.");
+        cb.checked = !cb.checked;
+        return;
       }
+      if (cb.checked) (roleAppAccessMap[roleId] ??= new Set()).add(appId);
+      else roleAppAccessMap[roleId]?.delete(appId);
     });
   });
 }

@@ -107,6 +107,21 @@ create policy "roles_all_admin" on public.roles
 create policy "user_roles_all_admin" on public.user_roles
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- Chaque utilisateur peut lire SES PROPRES affectations (nécessaire à la vue user_apps)
+create policy "user_roles_select_own" on public.user_roles
+  for select using (user_id = auth.uid());
+create policy "app_access_user_select_own" on public.app_access_user
+  for select using (user_id = auth.uid());
+create policy "app_access_role_select_own" on public.app_access_role
+  for select using (
+    exists (
+      select 1 from public.user_roles ur
+      where ur.role_id = app_access_role.role_id and ur.user_id = auth.uid()
+    )
+  );
+create policy "roles_select_authenticated" on public.roles
+  for select using (auth.role() = 'authenticated');
+
 -- Seuls les admins peuvent créer/modifier/supprimer des apps
 create policy "apps_write_admin" on public.apps
   for insert with check (public.is_admin());
