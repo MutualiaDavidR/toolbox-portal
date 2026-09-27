@@ -72,6 +72,21 @@ body {
 .login-box button:hover { background: var(--primary-dark); }
 
 .error { color: #dc2626; font-size: 0.85rem; margin-top: 0.75rem; min-height: 1em; }
+.success { color: #16a34a; font-size: 0.85rem; margin-top: 0.5rem; }
+.hidden { display: none !important; }
+
+.login-link {
+  display: block;
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+.login-link:hover { text-decoration: underline; }
+
+.login-hint { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+.login-box button:disabled { opacity: 0.6; cursor: default; }
 
 /* ---------- Dashboard ---------- */
 .topbar {
